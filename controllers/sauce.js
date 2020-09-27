@@ -28,7 +28,7 @@ exports.deleteSauce = (req, res, next) => {
 	Sauce.findOne({ _id: req.params.id})
 		.then(sauce => {
 			const filename = sauce.imageUrl.split('/images/')[1];
-			fs.unlink(`images/${filename}`, () => {
+			fs.unlink(`${__dirname}/../images/${filename}`, () => {
 				Sauce.deleteOne({ _id: req.params.id})
 					.then(() => res.status(200).json({ message: "Sauce supprimée."}))
 					.catch(error => res.status(400).json({ error }));
@@ -53,15 +53,21 @@ exports.likeSauce = (req, res, next) => {
 	Sauce.findOne({ _id: req.params.id})
 		.then(sauce => {
 			switch (req.body.like) {
+                // On n'aime pas la sauce
 				case -1:
 					sauce.usersDisliked.push(req.body.userId);
 					sauce.dislikes++;
 					break;
+                // On aime pas la sauce
 				case 1:
 					sauce.usersLiked.push(req.body.userId);
 					sauce.likes++;
 					break;
-				default:
+                // On a changé d'avis sur la sauce : annulation du vote pour la sauce
+                //   => Recherche de l'id dans les tableaux liked et disliked
+                //      -> Suppression de l'id dans le tableau concerné
+                //      -> On fait -1 dans le compteur correspondant
+                default:
 					let index = sauce.usersLiked.indexOf(req.body.userId);
 					if (index >= 0) {
 						sauce.usersLiked.splice(index);
@@ -73,7 +79,8 @@ exports.likeSauce = (req, res, next) => {
 							sauce.dislikes--;
 						}
 					}
-			}
+            }
+            // Mise à jour des likes/dislikes
 			Sauce.updateOne({ _id: req.params.id}, {
 				_id: req.params.id,
 				likes: sauce.likes,
@@ -81,8 +88,8 @@ exports.likeSauce = (req, res, next) => {
 				usersLiked: sauce.usersLiked,
 				usersDisliked: sauce.usersDisliked
 				})
-					.then(() => res.status(200).json({ message: "Sauce modifiée."}))
-					.catch(error => res.status(400).json({ error }));
+                .then(() => res.status(200).json({ message: "Sauce modifiée."}))
+                .catch(error => res.status(400).json({ error }));
 		})
 		.catch(error => res.status(400).json({ error }));
 };
