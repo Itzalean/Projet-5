@@ -14,7 +14,7 @@ exports.signup = (req, res, next) => {
 				.then(() => res.status(201).json({message: 'utilisateur créé.'}))
 				.catch(error => {
                     res.statusMessage = error.message;
-                    res.status(801).send();
+                    res.status(419).send();
                 });
 		})
 		.catch(error => res.status(500).send());
@@ -30,7 +30,7 @@ exports.login = (req, res, next) => {
             // Utilisateur verrouillé (au moins 3 mots de passe invalides d'affilée)
             if (user.attempts >= 3) {
                 res.statusMessage = 'User locked.';
-                return res.status(800).send();
+                return res.status(420).send();
             }
 			bcrypt.compare(req.body.password, user.password)
 				.then(valid => {
